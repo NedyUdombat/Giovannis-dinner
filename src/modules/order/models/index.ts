@@ -1,5 +1,5 @@
 import { Schema, model, models } from "mongoose";
-import { TaskTypes } from "../types/order";
+import { TaskTypes } from "../types/order.d";
 
 const OrderSchema = new Schema({
   duration: { type: Schema.Types.String, required: true },
@@ -13,4 +13,4 @@ const OrderSchema = new Schema({
   fulfilled: { type: Schema.Types.Boolean, default: false },
 });
 
-export const Order = models.Order || model("Order", OrderSchema);
+export const OrderModel = models.Order || model("Order", OrderSchema);

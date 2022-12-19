@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import dbConnect from "../../../lib/db";
-import { Order } from "../../../models/Order";
-import { OrderService } from "../../../services/order";
+import { dbConnect } from "@lib";
+import { OrderService } from "@order";
 
 export default async function handler(
   req: NextApiRequest,
@@ -26,7 +25,7 @@ export default async function handler(
       try {
         const order = await OrderService.updateOrder(id, {
           fulfilled: req.body.fulfilled,
-          item: req.body.fulfilled,
+          quantity: req.body.quantity,
         });
         res.status(201).json({ success: true, data: { order } });
       } catch (error) {
@@ -35,8 +34,8 @@ export default async function handler(
       break;
     case "DELETE":
       try {
-        await OrderService.removeOrder(id);
-        res.status(204).json({ success: true });
+        const result = await OrderService.removeOrder(id);
+        res.status(204).json({ success: true, result });
       } catch (error) {
         res.status(400).json({ success: false });
       }

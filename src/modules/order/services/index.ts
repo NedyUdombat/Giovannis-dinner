@@ -1,5 +1,5 @@
-import { Order } from "../models";
-import { TaskTypes, OrderReqObj } from "../types/order";
+import { OrderModel } from "../models";
+import { TaskTypes, OrderReqObj } from "../types/order.d";
 
 const getDuration = (task: TaskTypes) => {
   switch (task) {
@@ -15,14 +15,14 @@ const getDuration = (task: TaskTypes) => {
 };
 
 const fetchFulFilledOrders = () =>
-  Order.find({ fulfilled: false }).lean().exec();
+  OrderModel.find({ fulfilled: false }).lean().exec();
 
-const fetchOrder = (id: string) => Order.findById(id).exec();
+const fetchOrder = (id: string) => OrderModel.findOne({ _id: id }).exec();
 
 const createOrder = (order: OrderReqObj) => {
-  const newOrder = new Order({
+  const newOrder = new OrderModel({
     duration: getDuration(order.task),
-    task: order.task,
+    task: TaskTypes.MAKE,
     customer: order.customer,
     quantity: order.quantity,
   });
@@ -31,17 +31,14 @@ const createOrder = (order: OrderReqObj) => {
 };
 
 const updateOrder = (orderId: string, orderObject: any) =>
-  Order.findByIdAndUpdate(
+  OrderModel.findOneAndUpdate(
     {
       _id: orderId,
     },
-    {
-      fulfilled: orderObject.fulfilled,
-      item: orderObject.fulfilled,
-    }
+    orderObject
   );
 
-const removeOrder = (orderId: string) => Order.remove(orderId);
+const removeOrder = (orderId: string) => OrderModel.remove({ _id: orderId });
 
 const OrderService = {
   fetchFulFilledOrders,
