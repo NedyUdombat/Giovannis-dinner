@@ -2,7 +2,21 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+- First, install dependencies
+
+```bash
+yarn
+```
+
+- Add ENV Variables, run
+
+```bash
+cp .env.sample .env.local && cp .env.sample .env.test
+```
+
+- Update the env with your mongodb Cluster URL
+
+- Run the development server:
 
 ```bash
 npm run dev
@@ -10,7 +24,20 @@ npm run dev
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+
+## Testing
+
+Run
+```bash
+yarn test 
+#or
+yarn test --coverage #to show test coverage after test
+#or
+yarn test -- --watch #to run test in watch mode
+```
+
+visit [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
