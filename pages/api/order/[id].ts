@@ -1,9 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { dbConnect } from "@lib";
-import { OrderService } from "@order";
+import { dbConnect } from "../../../src/lib/db";
+import { validateSchema } from "../../../src/lib/validate";
+import { OrderService } from "../../../src/modules/order/services";
+import { udpateOrderSchema } from "../../../src/modules/order/validation/order.joi";
 
-export default async function handler(
+export default async function orderIdHandler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -23,13 +25,17 @@ export default async function handler(
       break;
     case "PUT":
       try {
+        await validateSchema(req.body, udpateOrderSchema);
         const order = await OrderService.updateOrder(id, {
           fulfilled: req.body.fulfilled,
           quantity: req.body.quantity,
         });
         res.status(201).json({ success: true, data: { order } });
       } catch (error) {
-        res.status(400).json({ success: false });
+        res.status(400).json({
+          success: false,
+          error: error?.message || "An error occured",
+        });
       }
       break;
     case "DELETE":
@@ -42,7 +48,7 @@ export default async function handler(
       break;
     default:
       res
-        .status(400)
+        .status(405)
         .json({ success: false, error: "This method is not allowed" });
       break;
   }

@@ -1,17 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { dbConnect } from "@lib";
-import { createOrderSchema, OrderService, OrderReqObj } from "@order";
+import { dbConnect } from "../../../src/lib/db";
+import { validateSchema } from "../../../src/lib/validate";
+import { OrderService } from "../../../src/modules/order/services";
+import { createOrderSchema } from "../../../src/modules/order/validation/order.joi";
 
-const validateOrder = async (body: OrderReqObj) => {
-  const status = createOrderSchema.validate(body);
-
-  const error = status?.error?.details.map((item) => item.message);
-
-  throw Error(JSON.stringify(error[0]));
-};
-
-export default async function handler(
+export default async function orderHandler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -30,7 +24,7 @@ export default async function handler(
       break;
     case "POST":
       try {
-        await validateOrder(req.body);
+        await validateSchema(req.body, createOrderSchema);
         const order = await OrderService.createOrder({
           customer: req.body.customer,
           quantity: req.body.quantity,
@@ -39,12 +33,12 @@ export default async function handler(
       } catch (error: any) {
         res
           .status(400)
-          .json({ success: false, error: error?.message || "An erro occured" });
+          .json({ success: false, error: error?.message || "An error occured" });
       }
       break;
     default:
       res
-        .status(400)
+        .status(405)
         .json({ success: false, error: "This method is not allowed" });
       break;
   }

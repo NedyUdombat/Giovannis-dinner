@@ -1,33 +1,82 @@
+import { v4 as uuidv4 } from "uuid";
+import dayjs from "dayjs";
+
 import { OrderModel } from "../models";
 import { TaskTypes, OrderReqObj } from "../types/order.d";
 
-const getDuration = (task: TaskTypes) => {
-  switch (task) {
-    case TaskTypes.MAKE:
-      return "02:30";
-    case TaskTypes.SERVE:
-      return "01:00";
-    case TaskTypes.BREAK:
-      return "03:00";
-    default:
-      throw Error(`Task ${task} does not exist`);
+const tasks = [
+  { taskType: TaskTypes.MAKE, duration: "02:30" },
+  { taskType: TaskTypes.SERVE, duration: "01:00" },
+];
+
+const fetchFulFilledOrders = async () => {
+  const orders = await OrderModel.find({ fulfilled: false }).lean();
+
+  if (!orders.length) {
+    return [];
   }
+
+  return { orders };
 };
 
-const fetchFulFilledOrders = () =>
-  OrderModel.find({ fulfilled: false }).lean().exec();
+const fetchSchedule = async () => {
+  const orders = await OrderModel.find({ fulfilled: false }).lean();
 
-const fetchOrder = (id: string) => OrderModel.findOne({ _id: id }).exec();
+  if (!orders.length) {
+    return [];
+  }
 
-const createOrder = (order: OrderReqObj) => {
-  const newOrder = new OrderModel({
-    duration: getDuration(order.task),
-    task: TaskTypes.MAKE,
-    customer: order.customer,
-    quantity: order.quantity,
+  const now = dayjs();
+
+  const updatedOrders = orders.map((order, index) => {
+    const timeline =
+      index === 0
+        ? now
+        : order.task === TaskTypes.SERVE
+        ? orders[index - 1].timeline.add(
+            150 * orders[index - 1].quantity,
+            "second"
+          )
+        : orders[index - 1].timeline.add(
+            60 * orders[index - 1].quantity,
+            "second"
+          );
+    order.timeline = timeline;
+    order.sn = index + 1;
+
+    return order;
   });
 
-  return newOrder.save();
+  updatedOrders.push({
+    _id: uuidv4(),
+    task: "Take a Break",
+    sn: updatedOrders.length + 1,
+  });
+
+  return { orders: updatedOrders };
+};
+
+const fetchOrder = (id: string) => OrderModel.findOne({ _id: id });
+
+const createOrder = async (order: OrderReqObj) => {
+  const result = await OrderModel.create({
+    task: TaskTypes.MAKE,
+    duration: tasks.find((task) => task.taskType === TaskTypes.MAKE)?.duration,
+    customer: order.customer,
+    quantity: order.quantity,
+  }).then(async (res) => {
+    const serveOrder = await OrderModel.create({
+      task: TaskTypes.SERVE,
+      duration: tasks.find((task) => task.taskType === TaskTypes.SERVE)
+        ?.duration,
+      customer: order.customer,
+      quantity: order.quantity,
+    });
+
+    return [res, serveOrder];
+  });
+
+  return result;
 };
 
 const updateOrder = (orderId: string, orderObject: any) =>
@@ -35,13 +84,15 @@ const updateOrder = (orderId: string, orderObject: any) =>
     {
       _id: orderId,
     },
-    orderObject
+    orderObject,
+    { new: true }
   );
 
-const removeOrder = (orderId: string) => OrderModel.remove({ _id: orderId });
+const removeOrder = (orderId: string) => OrderModel.deleteOne({ _id: orderId });
 
 const OrderService = {
   fetchFulFilledOrders,
+  fetchSchedule,
   fetchOrder,
   createOrder,
   updateOrder,
