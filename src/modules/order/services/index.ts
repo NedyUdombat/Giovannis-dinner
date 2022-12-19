@@ -1,5 +1,5 @@
-import { Order } from "../models/Order";
-import { TaskTypes, OrderReqObj } from "../types/order.d";
+import { Order } from "../models";
+import { TaskTypes, OrderReqObj } from "../types/order";
 
 const getDuration = (task: TaskTypes) => {
   switch (task) {

@@ -1,0 +1,21 @@
+{
+  "presets": ["next/babel"],
+  "env": {
+    "test": {
+      "plugins": ["@babel/plugin-transform-modules-commonjs"]
+    }
+  },
+  "plugins": [
+    [
+      "babel-plugin-module-resolver",
+      {
+        "cwd": "babelrc",
+        "extensions": [".ts", ".tsx", ".js", ".ios.js", ".android.js"],
+        "alias": {
+          "@order": "./src/modules/order",
+          "@lib": "./src/lib"
+        }
+      }
+    ]
+  ]
+}
